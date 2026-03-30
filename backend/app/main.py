@@ -1,3 +1,5 @@
+from unittest import result
+
 from fastapi import FastAPI, UploadFile, File
 from PIL import Image
 import io
@@ -7,6 +9,7 @@ from fastapi import HTTPException
 from backend.app.model import load_model
 from backend.app.utils import preprocess_image, predict
 from backend.app.services.prediction_service import interpret_ripeness
+from backend.app.services.intelligence_service import generate_intelligence
 
 app = FastAPI()
 
@@ -41,8 +44,14 @@ async def predict_image(file: UploadFile = File(...)):
         # 🔥 HANDLE INVALID INPUT
         if result["status"] == "invalid":
             return result
+        # 🔥 ADD INTELLIGENCE LAYER
+        intelligence = generate_intelligence(result["ripeness_percent"])
 
-        return result
+       # 🔥 MERGE OUTPUT
+        final_response = {**result, **intelligence}
+         
+
+        return final_response
 
     except HTTPException as e:
         raise e
