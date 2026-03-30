@@ -1,6 +1,0 @@
-fastapi
-uvicorn
-torch
-torchvision
-pillow
-timm
