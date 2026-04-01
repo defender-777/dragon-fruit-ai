@@ -6,10 +6,10 @@ import io
 import torch
 from fastapi import HTTPException
 
-from backend.app.model import load_model
-from backend.app.utils import preprocess_image, predict
-from backend.app.services.prediction_service import interpret_ripeness
-from backend.app.services.intelligence_service import generate_intelligence
+from app.model import load_model
+from app.utils import preprocess_image, predict
+from app.services.prediction_service import interpret_ripeness
+from app.services.intelligence_service import generate_intelligence
 
 app = FastAPI()
 
