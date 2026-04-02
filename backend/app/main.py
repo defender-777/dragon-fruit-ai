@@ -1,6 +1,8 @@
 from unittest import result
+import logging
+import time
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Request
 from PIL import Image
 import io
 import torch
@@ -11,7 +13,27 @@ from app.utils import preprocess_image, predict
 from app.services.prediction_service import interpret_ripeness
 from app.services.intelligence_service import generate_intelligence
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger("api_logger")
+
 app = FastAPI()
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    logger.info(f"Incoming request: {request.method} {request.url.path}")
+    try:
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        logger.info(f"Completed request: {request.method} {request.url.path} - Status: {response.status_code} - Time: {process_time:.4f}s")
+        return response
+    except Exception as e:
+        process_time = time.time() - start_time
+        logger.error(f"Request failed: {request.method} {request.url.path} - Error: {str(e)} - Time: {process_time:.4f}s")
+        raise
 
 device = torch.device("cpu")
 model = load_model()
@@ -50,11 +72,14 @@ async def predict_image(file: UploadFile = File(...)):
        # 🔥 MERGE OUTPUT
         final_response = {**result, **intelligence}
          
+        logger.info(f"Prediction result: {final_response}")
 
         return final_response
 
     except HTTPException as e:
+        logger.error(f"HTTPException: {e.detail}")
         raise e
 
     except Exception as e:
+        logger.exception("Unexpected error during processing")
         raise HTTPException(status_code=500, detail=str(e))
