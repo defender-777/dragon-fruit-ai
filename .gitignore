@@ -6,9 +6,9 @@ __pycache__/
 venv/
 
 # ML Models
-*.pth
-*.pt
 *.h5
+*.pt
+*.pth
 
 # Data
 data/
