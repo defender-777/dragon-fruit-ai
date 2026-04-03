@@ -1,16 +1,49 @@
-from pathlib import Path
+import os
+import urllib.request
 import torch
 import torch.nn as nn
 import timm
 
+# -------------------------------
+# DEVICE CONFIG
+# -------------------------------
 device = torch.device("cpu")
 
-# ✅ Correct Docker-safe path
-BASE_DIR = Path(__file__).resolve().parent.parent
-MODEL_PATH = BASE_DIR / "models" / "ripeness_model.pth"
+# -------------------------------
+# MODEL CONFIG
+# -------------------------------
+MODEL_DIR = "models"
+MODEL_PATH = os.path.join(MODEL_DIR, "ripeness_model.pth")
+
+MODEL_URL = "https://huggingface.co/gagan05/deepvision-ripeness-model/resolve/main/ripeness_model.pth"
 
 
+# -------------------------------
+# DOWNLOAD MODEL IF NOT EXISTS
+# -------------------------------
+def download_model():
+    os.makedirs(MODEL_DIR, exist_ok=True)
+
+    if not os.path.exists(MODEL_PATH):
+        print("⬇ Downloading model from Hugging Face...")
+
+        try:
+            urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+            print(" Model downloaded successfully")
+
+        except Exception as e:
+            raise RuntimeError(f" Failed to download model: {e}")
+
+    else:
+        print(" Model already exists (cached locally)")
+
+
+# -------------------------------
+# LOAD MODEL
+# -------------------------------
 def load_model():
+    download_model()
+
     model = timm.create_model('efficientnet_b0', pretrained=False)
 
     model.classifier = nn.Sequential(
@@ -20,10 +53,16 @@ def load_model():
         nn.Linear(128, 2)
     )
 
-    state_dict = torch.load(MODEL_PATH, map_location=device)
+    try:
+        state_dict = torch.load(MODEL_PATH, map_location=device)
+        model.load_state_dict(state_dict)
 
-    model.load_state_dict(state_dict)
+    except Exception as e:
+        raise RuntimeError(f" Model loading failed: {e}")
+
     model.to(device)
     model.eval()
+
+    print(" Model loaded and ready for inference")
 
     return model
