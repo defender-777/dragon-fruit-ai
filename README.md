@@ -36,14 +36,21 @@ It combines:
 *  Optimized CPU inference
 *  REST API for mobile/web integration
 *  Fully Dockerized for portability
-
----
+*  Dynamic ML model loading (Hugging Face)
+*  Dockerized backend
+*  Cloud deployment (Render)
+*  Real-time fruit ripeness prediction
+*  Production-ready API design
 
 ##  System Architecture
 
 ML Model (EfficientNet)
 ↓
 FastAPI Backend
+↓
+HuggingFace Model Storage 
+↓
+Dynamic Model Loading 
 ↓
 Inference + Intelligence Layer
 ↓
@@ -62,6 +69,7 @@ Mobile / Client Integration
 * **Deployment:** Docker
 * **Image Processing:** PIL
 * **Numerical Ops:** NumPy
+* **Cloud Platform:** Render
 
 ---
 
@@ -94,6 +102,13 @@ http://localhost:8000/docs
 ---
 
 ##  API Usage
+## 📡 API Usage
+
+POST /predict
+
+Send image as multipart/form-data
+
+
 
 ### Endpoint
 
@@ -170,6 +185,12 @@ Key Features:
 * Production-ready architecture
 
 ---
+
+## 🌐 Live API
+
+🔗 https://dragon-fruit-ai.onrender.com  
+📚 Docs: https://dragon-fruit-ai.onrender.com/docs
+
 
 ##  Contributing
 
