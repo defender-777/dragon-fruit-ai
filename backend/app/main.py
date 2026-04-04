@@ -41,13 +41,13 @@ async def predict_image(file: UploadFile = File(...)):
 
         result = interpret_ripeness(probs)
 
-        # 🔥 HANDLE INVALID INPUT
+        # HANDLE INVALID INPUT
         if result["status"] == "invalid":
             return result
-        # 🔥 ADD INTELLIGENCE LAYER
+        # ADD INTELLIGENCE LAYER
         intelligence = generate_intelligence(result["ripeness_percent"])
 
-       # 🔥 MERGE OUTPUT
+       # MERGE OUTPUT
         final_response = {**result, **intelligence}
          
 
