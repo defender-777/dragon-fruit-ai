@@ -102,7 +102,7 @@ http://localhost:8000/docs
 ---
 
 ##  API Usage
-## 📡 API Usage
+
 
 POST /predict
 
