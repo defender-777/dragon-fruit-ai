@@ -1,60 +1,149 @@
-from unittest import result
-
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from PIL import Image
 import io
-import torch
-from fastapi import HTTPException
 
-from app.model import load_model
-from app.utils import preprocess_image, predict
+from app.model import load_model, run_inference, validate_dragon_fruit
+from app.utils import preprocess_image
 from app.services.prediction_service import interpret_ripeness
 from app.services.intelligence_service import generate_intelligence
+from app.detr import detect_objects, crop_main_object
 
 app = FastAPI()
 
-device = torch.device("cpu")
 model = load_model()
 
+
+# -------------------------------
+# USER GUIDANCE (🔥 UX UPGRADE)
+# -------------------------------
+def guidance_message():
+    return "Ensure a single dragon fruit is centered, well-lit, and occupies most of the frame. Avoid cluttered backgrounds."
+
+
+# -------------------------------
+# HEALTH CHECK
+# -------------------------------
 @app.get("/")
 def home():
-    return {"message": "Dragon Fruit Ripeness API Running"}
+    return {"message": "Dragon Fruit Intelligence API 🚀"}
 
-@app.post("/predict")
-async def predict_image(file: UploadFile = File(...)):
+
+# -------------------------------
+# BASIC PREDICT
+# -------------------------------
+@app.post("/internal/predict", include_in_schema=False)
+async def predict(file: UploadFile = File(...)):
     try:
-        if not file:
-            raise HTTPException(status_code=400, detail="No file uploaded")
-
         image_bytes = await file.read()
-
-        try:
-            image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        except:
-            raise HTTPException(status_code=400, detail="Invalid image file")
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
         image_tensor = preprocess_image(image)
 
-        with torch.no_grad():
-            output = model(image_tensor.unsqueeze(0))
-            probs = torch.softmax(output, dim=1)
+        probs = run_inference(model, image_tensor)
 
         result = interpret_ripeness(probs)
 
-        # HANDLE INVALID INPUT
         if result["status"] == "invalid":
-            return result
-        # ADD INTELLIGENCE LAYER
+            return {
+                **result,
+                "guidance": guidance_message()
+            }
+
         intelligence = generate_intelligence(result["ripeness_percent"])
 
-       # MERGE OUTPUT
-        final_response = {**result, **intelligence}
-         
+        return {**result, **intelligence}
 
-        return final_response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    except HTTPException as e:
-        raise e
+
+# -------------------------------
+# DETECTION ONLY
+# -------------------------------
+@app.post("/internal/detect", include_in_schema=False)
+async def detect(file: UploadFile = File(...)):
+    try:
+        image_bytes = await file.read()
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+        detections = detect_objects(image)
+
+        if len(detections) == 0:
+            return {
+                "status": "error",
+                "message": "No object detected",
+                "guidance": guidance_message()
+            }
+
+        return {
+            "status": "success",
+            "detections": detections
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------------------
+# SMART PIPELINE (🔥🔥 CORE)
+# -------------------------------
+@app.post("/predict")
+async def predict_smart(file: UploadFile = File(...)):
+
+    try:
+        image_bytes = await file.read()
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+        # ---------------- DETR ----------------
+        detections = detect_objects(image)
+
+        # 🔥 FALLBACK (IMPORTANT FIX)
+        if len(detections) == 0:
+            cropped = image
+        else:
+            cropped = crop_main_object(image, detections)
+
+        if cropped is None:
+            return {
+                "status": "error",
+                "message": "Unable to isolate object",
+                "guidance": guidance_message()
+            }
+
+        # ---------------- MODEL ----------------
+        image_tensor = preprocess_image(cropped)
+
+        probs = run_inference(model, image_tensor)
+
+        # 🔥 VALIDATION
+        is_valid, confidence = validate_dragon_fruit(probs)
+
+        if not is_valid:
+            return {
+                "status": "error",
+                "message": "Not a Dragon Fruit",
+                "confidence": confidence,
+                "guidance": guidance_message()
+            }
+
+        # 🔥 EDGE CASE FILTER
+        if 0.85 < confidence < 0.92:
+            return {
+                "status": "error",
+                "message": "Uncertain prediction",
+                "confidence": confidence,
+                "guidance": guidance_message()
+            }
+
+        result = interpret_ripeness(probs)
+
+        intelligence = generate_intelligence(result["ripeness_percent"])
+
+        return {
+            **result,
+            **intelligence,
+            "detections": detections
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
