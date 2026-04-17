@@ -1,4 +1,4 @@
-#  Dragon Fruit Ripeness Detection System
+#  DeepVision AI – Dragon Fruit Intelligence Engine
 
 ![Dockerized](https://img.shields.io/badge/Docker-Containerized-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
@@ -10,90 +10,112 @@
 
 ##  Overview
 
-The **Dragon Fruit Ripeness Detection System** is a production-ready AI system that predicts the ripeness level of dragon fruits using deep learning.
+**DeepVision AI** is a **production-grade ML-as-a-Service system** that performs **intelligent dragon fruit analysis** using a multi-stage AI pipeline.
 
-It combines:
+Unlike basic ML projects, this system combines:
 
 *  Deep Learning (EfficientNet)
-*  FastAPI backend for inference
-*  Docker containerization for deployment
-*  Intelligent decision layer for actionable insights
+*  Object Detection (DETR)
+*  FastAPI inference engine
+*  Docker containerization
+*  Cloud deployment (Render)
+*  Dynamic model loading (Hugging Face)
+*  Intelligence layer for decision-making
 
 ---
 
-##  Features
+##  Key Features
 
-*  Image-based ripeness detection
-*  Ripeness percentage prediction
-*  Intelligent output layer:
+###  Core AI Capabilities
 
-  * Quality scoring (0–100)
-  * Market grading (A+, A, B+, B, C)
-  * Shelf-life estimation
-  * Price categorization
-  * Harvest recommendation
-*  Out-of-Distribution (OOD) detection
-*  Optimized CPU inference
-*  REST API for mobile/web integration
-*  Fully Dockerized for portability
-*  Dynamic ML model loading (Hugging Face)
-*  Dockerized backend
-*  Cloud deployment (Render)
-*  Real-time fruit ripeness prediction
-*  Production-ready API design
+* Dragon fruit ripeness prediction (image-based)
+* Multi-stage inference pipeline (Detection → Classification → Validation)
+* Strict out-of-distribution rejection (non-dragon fruits filtered)
+* Dynamic model loading from Hugging Face
+
+---
+
+###  Intelligent Output Layer
+
+* Ripeness percentage (0–100)
+* Quality score
+* Grade classification (A+, A, B+, B, C)
+* Shelf-life estimation
+* Market category (Export / Local)
+* Price category
+* Harvest recommendation
+
+---
+
+###  System Features
+
+* Production-ready REST API
+* In-memory inference (optimized performance)
+* DETR-based object localization
+* Smart fallback mechanism (robust inference)
+* Strict validation pipeline (reduces false positives)
+* Dockerized backend for portability
+* Cloud deployment with auto-rebuild (CI/CD style)
+* Mobile-ready API design
+
+---
 
 ##  System Architecture
 
-ML Model (EfficientNet)
-↓
-FastAPI Backend
-↓
-HuggingFace Model Storage 
-↓
-Dynamic Model Loading 
-↓
-Inference + Intelligence Layer
-↓
-Docker Container
-↓
-Cloud Deployment (Render)
-↓
-Mobile / Client Integration
+```text
+Client (Mobile / Web)
+        ↓
+POST /predict  (Public API)
+        ↓
+DETR Object Detection
+        ↓
+Object Cropping (ROI Extraction)
+        ↓
+Deep Learning Model (EfficientNet)
+        ↓
+Validation Layer (OOD + Confidence Filtering)
+        ↓
+Intelligence Layer (Decision Engine)
+        ↓
+JSON Response
+```
 
 ---
 
 ##  Tech Stack
 
 * **ML Framework:** PyTorch, timm
+* **Detection:** DETR (Transformers)
 * **Backend:** FastAPI
 * **Deployment:** Docker
+* **Model Hosting:** Hugging Face
+* **Cloud Platform:** Render
 * **Image Processing:** PIL
 * **Numerical Ops:** NumPy
-* **Cloud Platform:** Render
 
 ---
 
 ##  Getting Started
 
-###  1. Clone Repository
+### 1️ Clone Repository
 
 ```bash
-git clone https://github.com/your-username/dragon-fruit-ai.git
+git clone https://github.com/defender-777/dragon-fruit-ai.git
 cd dragon-fruit-ai/backend
 ```
 
 ---
 
-###  2. Run with Docker
+###  Run with Docker
 
 ```bash
-docker build -t dragon-fruit-api .
-docker run -p 8000:8000 dragon-fruit-api
+docker build -t deepvision-ai .
+docker run -p 8000:8000 deepvision-ai
 ```
 
 ---
 
-###  3. Access API
+###  Access API
 
 ```text
 http://localhost:8000/docs
@@ -103,38 +125,37 @@ http://localhost:8000/docs
 
 ##  API Usage
 
-
-POST /predict
-
-Send image as multipart/form-data
-
-
-
-### Endpoint
+###  Public Endpoint
 
 ```text
 POST /predict
 ```
 
+> This is the **main production endpoint** (Smart Pipeline)
+
 ---
 
-### Request
+###  Request
 
 * Type: `multipart/form-data`
 * Field: `file` (image)
 
 ---
 
-### Example Response
+###  Example Response
 
 ```json
 {
-  "ripeness_percent": 78,
-  "grade": "A",
-  "quality_score": 82,
+  "status": "success",
+  "ripeness_percent": 89.98,
+  "stage": "Mature",
+  "confidence": 89.98,
+  "shelf_life": "1-2 days",
+  "quality_score": 95.02,
+  "grade": "A+",
+  "market": "Export",
   "price_category": "Premium",
-  "shelf_life_days": 3,
-  "harvest_recommendation": "Ready"
+  "recommendation": "Harvest now (ideal)"
 }
 ```
 
@@ -142,19 +163,21 @@ POST /predict
 
 ##  Error Handling
 
-| Scenario       | Response                  |
-| -------------- | ------------------------- |
-| Invalid image  | 400                       |
-| Internal error | 500                       |
-| OOD input      | `{ "status": "invalid" }` |
+| Scenario           | Response               |
+| ------------------ | ---------------------- |
+| Invalid image      | 400                    |
+| Non-dragon fruit   | Rejected with guidance |
+| No object detected | Guidance message       |
+| Internal error     | 500                    |
 
 ---
 
 ##  Testing
 
-* Swagger UI available at `/docs`
-* Supports real-time image upload
-* Validated with real dataset samples
+* Swagger UI: `/docs`
+* Supports real-time image uploads
+* Tested on multiple fruit classes
+* Validated with edge-case scenarios (OOD inputs)
 
 ---
 
@@ -164,104 +187,115 @@ POST /predict
 dragon-fruit-ai/
 ├── backend/
 │   ├── app/
-│   ├── models/
-│   │   └── ripeness_model.pth
+│   │   ├── main.py
+│   │   ├── model.py
+│   │   ├── detr.py
+│   │   ├── utils.py
+│   │   ├── services/
+│   │   │   ├── prediction_service.py
+│   │   │   └── intelligence_service.py
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── .dockerignore
 ├── ai-engine/
+├── mobile-app/ (future)
 ```
 
 ---
 
 ##  Deployment
 
-The system is designed for deployment on cloud platforms like Render.
+Designed for **cloud-native deployment**:
 
-Key Features:
-
+* Docker-based builds
 * Dynamic port handling
-* Docker-based deployment
-* Production-ready architecture
+* Auto-deploy via GitHub integration
+* Stateless architecture (model loaded at runtime)
 
 ---
 
-## 🌐 Live API
+##  Live API
 
-🔗 https://dragon-fruit-ai.onrender.com  
+🔗 https://dragon-fruit-ai.onrender.com
 📚 Docs: https://dragon-fruit-ai.onrender.com/docs
 
+---
 
 ##  Contributing
 
-We welcome contributions from developers, ML engineers, and students!
+We welcome contributors across domains:
 
 ### Steps:
 
-1. Fork the repository
-2. Create a new branch
-3. Make your changes
-4. Submit a Pull Request
+1. Fork repository
+2. Create branch (`feature/...`)
+3. Commit changes
+4. Open Pull Request
 
 ---
 
 ##  Open Issues
 
-Check out:
-
-* `good-first-issue` for beginners
-* `help wanted` for contributors
-* `ml`, `backend`, `devops` for domain-specific tasks
+* `good-first-issue`
+* `help wanted`
+* `ml`, `backend`, `devops`, `frontend`
 
 ---
 
 ##  Future Improvements
 
 *  API authentication & rate limiting
+*  MongoDB analytics dashboard
 *  Mobile app integration
-*  Batch inference support
+*  Batch inference API
 *  Model explainability (Grad-CAM)
-*  Multi-fruit detection system
-*  CI/CD pipeline automation
+*  Multi-fruit classification system
+*  CI/CD automation
 
 ---
 
-##  Learnings & Challenges
+##  Learnings & Engineering Challenges
 
-This project involved solving real-world engineering problems:
-
-* Model architecture mismatch (timm vs torchvision)
-* Docker dependency conflicts
-* Large image optimization (CUDA → CPU)
-* Network timeout handling
-* Cloud deployment constraints
+* Handling model–framework mismatches (timm vs torchvision)
+* Optimizing inference (GPU → CPU transition)
+* Docker layer caching & build optimization
+* Dynamic model loading (reducing image size by >80%)
+* Handling OOD (Out-of-Distribution) inputs
+* Designing multi-stage inference pipelines
+* Building production-ready ML APIs
 
 ---
 
 ##  Highlights
 
-* End-to-end ML system (training → deployment)
-* Production-ready backend
-* Dockerized and optimized
-* Real-world problem solving
+* End-to-end ML system (training → deployment → scaling)
+* Multi-stage AI pipeline (Detection + Classification)
+* Production-ready backend architecture
+* Cloud-deployed ML service
+* Real-world problem solving (agriculture AI)
 
 ---
 
 ##  Contact
 
-For collaboration or queries:
-
-* GitHub: https://github.com/defender-777
-
+GitHub: https://github.com/defender-777
 
 ---
 
-##  Support
+## ⭐ Support
 
 If you find this project useful:
 
- Star ⭐ the repository
- Share with others
- Contribute 🚀
+* Star ⭐ the repository
+* Share 📢
+* Contribute 
+
+---
+
+##  Final Note
+
+This is not just a model.
+
+This is a **production-grade AI system combining ML, backend engineering, and cloud deployment - ML-as-a-Service**.
 
 ---
