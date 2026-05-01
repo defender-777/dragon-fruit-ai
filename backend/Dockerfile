@@ -14,7 +14,11 @@ RUN apt-get update --fix-missing && apt-get install -y \
 COPY requirements.txt .
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir \
+    -f https://download.pytorch.org/whl/torch_stable.html \
+    -r requirements.txt
+
+RUN pip install --no-cache-dir transformers
 
 # Copy all backend code
 COPY . .
