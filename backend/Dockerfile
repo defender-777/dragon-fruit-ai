@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir \
     -f https://download.pytorch.org/whl/torch_stable.html \
     -r requirements.txt
 
-RUN pip install --no-cache-dir transformers
+RUN pip install --no-cache-dir transformers==4.41.2
 
 # Copy all backend code
 COPY . .
